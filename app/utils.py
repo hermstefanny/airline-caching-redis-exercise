@@ -1,7 +1,4 @@
 import kaggle
-import pandas as pd
-from time import sleep
-import random
 
 
 def get_kaggle_data(data_path) -> None:
