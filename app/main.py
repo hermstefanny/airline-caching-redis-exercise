@@ -5,20 +5,13 @@ from cache import Cache
 from dotenv import load_dotenv
 import os
 from calculations import calculate_average_delay, calculation_cached
+from logging_setup import setup_config
 
 
 if __name__ == "__main__":
 
     # get_kaggle_data("usdot/flight-delays")
-
-    logging.basicConfig(
-        filename="cached_logs.log", format="%(asctime)s %(message)s", filemode="w"
-    )
-
-    logger = logging.getLogger()
-
-    logger.setLevel(logging.INFO)
-
+    setup_config("cache_logs.log")
     print("---- Loading data ----")
 
     airlines_df = pd.read_csv("data/airlines.csv")
@@ -39,7 +32,7 @@ if __name__ == "__main__":
         },
     )
     print("----  Data loaded  ----")
-    logger.info(" Data loaded")
+    logging.info(" Data loaded")
     # Functions without caching
     print("\n****** Results from normal functions ******")
     print(
@@ -60,9 +53,9 @@ if __name__ == "__main__":
     print("\n\n****** Results from cached functions ****** ")
 
     print(
-        f"\nAverage Arrival delay by airline:  \n{calculation_cached(cache, 15, 'ARRIVAL_delay_by_airline',  calculate_average_delay, flights_df, 'AIRLINE', 'ARRIVAL_DELAY', logger )}\n"
+        f"\nAverage Arrival delay by airline:  \n{calculation_cached(cache, 15, 'ARRIVAL_delay_by_airline',  calculate_average_delay, flights_df, 'AIRLINE', 'ARRIVAL_DELAY' )}\n"
     )
 
     print(
-        f"\nAverage Departure Delay by airline:  \n{calculation_cached(cache, 15, 'DEPARTURE_delay_by_airline',  calculate_average_delay, flights_df, 'AIRLINE', 'DEPARTURE_DELAY', logger)}\n"
+        f"\nAverage Departure Delay by airline:  \n{calculation_cached(cache, 15, 'DEPARTURE_delay_by_airline',  calculate_average_delay, flights_df, 'AIRLINE', 'DEPARTURE_DELAY')}\n"
     )
