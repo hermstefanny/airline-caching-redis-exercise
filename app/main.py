@@ -4,30 +4,35 @@ import time
 from cache import Cache
 
 
-def calculate_average_delay(df, column_to_group, column_to_analyze):
+def calculate_average_delay(df: pd, column_to_group: str, column_to_analyze: str):
     start_time = time.time()
     average_delay_per_parameter = df.groupby(column_to_group)[column_to_analyze].mean()
     print(f"Time taken to execute {time.time()-start_time}")
     return average_delay_per_parameter
 
 
-def avg_arrival_p_airline_cached(cache: Cache, df, column_to_group, column_to_analyze):
+def calculation_cached(
+    cache: Cache, TTL: int, func_id: str, function_to_calc, *args, **kwargs
+):
+
     start_time = time.time()
-    arrv_key = f"avg_arrival_p_airline_cached:{column_to_group}:{column_to_analyze}"
-    cached_result = cache.get_data_from_cache(arrv_key)
+    key = f"measure_cached_{func_id}"
+    cached_result = cache.get_data_from_cache(key)
 
     if cached_result is not None:
+        print("Cache hit: Returning result from cache")
         print(f"Time taken to execute (cached) {time.time()-start_time}")
-        print("Result from cache")
+
         return cached_result
 
-    average_delay_per_parameter = (
-        df.groupby(column_to_group)[column_to_analyze].mean().to_dict()
-    )
-    print(f"Time taken to execute (non-cached) {time.time()-start_time}")
-    cache.save_data_to_cache(arrv_key, average_delay_per_parameter)
+    else:
+        print("Cache miss: Data not found in cache. \nCalculating..")
+        measure_per_parameter = function_to_calc(*args, **kwargs).to_dict()
 
-    return average_delay_per_parameter
+        print("..Saving to cache..")
+        cache.save_data_to_cache(key, measure_per_parameter, TTL)
+
+        return measure_per_parameter
 
 
 if __name__ == "__main__":
@@ -52,13 +57,24 @@ if __name__ == "__main__":
     )
 
     # Functions without caching
-    print(calculate_average_delay(flights_df, "AIRLINE", "ARRIVAL_DELAY"))
+    print("\n\n ****** Results from normal functions ******")
+    print(
+        f"Average Arrival Delay by airline:\n{calculate_average_delay(flights_df, 'AIRLINE', 'ARRIVAL_DELAY')}\n"
+    )
 
-    # avg_departure_p_airline = calculate_average_delay(
-    #     flights_df, "AIRLINE", "DEPARTURE_DELAY"
-    # )
+    print(
+        f"Average Departure Delay by airline:\n{calculate_average_delay(flights_df, 'AIRLINE', 'DEPARTURE_DELAY')}\n"
+    )
 
     # Functions with caching
     cache = Cache()
+    TTL_min = 15
+    print("\n\n ****** Results from cached functions ****** ")
 
-    print(avg_arrival_p_airline_cached(cache, flights_df, "AIRLINE", "ARRIVAL_DELAY"))
+    print(
+        f"Average Arrival delay by airline:  \n{calculation_cached(cache, 15, 'ARRIVAL_delay_by_airline', calculate_average_delay, flights_df, 'AIRLINE', 'ARRIVAL_DELAY' )}\n"
+    )
+
+    print(
+        f"Average Departure Delay by airline:  \n{calculation_cached(cache, 15, 'DEPARTURE_delay_by_airline', calculate_average_delay, flights_df, 'AIRLINE', 'DEPARTURE_DELAY')}\n"
+    )

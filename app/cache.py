@@ -30,7 +30,7 @@ class Cache:
             sys.exit(1)
 
     def save_data_to_cache(
-        self, key: str, value: Dict[Any, Any], exp_in_hours: int = 24
+        self, key: str, value: Dict[Any, Any], exp_in_minutes: int
     ) -> bool:
         """
         Save data to redis.
@@ -46,7 +46,7 @@ class Cache:
         # Store data in cache with the defined key
         state = self.client.setex(
             key,
-            timedelta(hours=exp_in_hours),
+            timedelta(minutes=exp_in_minutes),
             value=str_value,
         )
 
